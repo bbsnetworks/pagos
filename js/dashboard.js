@@ -1,25 +1,72 @@
+// =========================
+// Listado / Búsqueda clientes
+// =========================
 let offset = 0;
 const limit = 20;
 
+let isLoading = false;
+let hasMore = true;
+let inFlightController = null;
+let lastRequestId = 0;
+
+// Debounce simple
+function debounce(fn, delay = 450) {
+  let t;
+  const wrapped = (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+  wrapped.cancel = () => clearTimeout(t);
+  return wrapped;
+}
+
+function getSearchValue() {
+  const el = document.getElementById("buscador");
+  return (el?.value || "").trim();
+}
+
 async function cargarClientes(reset = false) {
+  // Cancelar petición anterior si existe (evita duplicados en redes lentas)
+  if (inFlightController) {
+    inFlightController.abort();
+    inFlightController = null;
+  }
+
   if (reset) {
     offset = 0;
+    hasMore = true;
     document.getElementById("lista-clientes").innerHTML = '';
   }
 
+  if (!hasMore && !reset) return;
+  if (isLoading) return;
+
+  isLoading = true;
+  const searchNow = getSearchValue();
+  const requestId = ++lastRequestId;
+
   try {
+    inFlightController = new AbortController();
+
     const res = await fetch('php/clientes.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: inFlightController.signal,
       body: JSON.stringify({
         offset,
         limit,
-        search: document.getElementById("buscador").value
+        search: searchNow
       })
     });
 
+    // Si esta respuesta no es la más reciente, la ignoramos
+    if (requestId !== lastRequestId) return;
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
     const data = await res.json();
 
+    const cont = document.getElementById("lista-clientes");
     data.forEach(cliente => {
       const div = document.createElement("div");
       div.className = "p-4 bg-gray-800 border border-gray-700 rounded flex justify-between items-center";
@@ -38,28 +85,38 @@ async function cargarClientes(reset = false) {
           <button onclick="abrirGenerarPago(${cliente.id})" class="px-4 py-2 bg-green-600 rounded hover:bg-green-700">Generar pago</button>
         </div>
       `;
-      document.getElementById("lista-clientes").appendChild(div);
+      cont.appendChild(div);
     });
 
-    offset += limit;
+    // Paginación: avanzar por lo realmente recibido
+    offset += data.length;
+    hasMore = data.length === limit;
+
   } catch (error) {
-    Swal.fire('Error', 'No se pudo cargar la lista de clientes', 'error');
-    console.error(error);
+    if (error?.name !== 'AbortError') {
+      console.error(error);
+      Swal.fire('Error', 'No se pudo cargar la lista de clientes', 'error');
+    }
+  } finally {
+    if (requestId === lastRequestId) {
+      isLoading = false;
+      inFlightController = null;
+    }
   }
 }
 
-function buscarClientes() {
-  cargarClientes(true);
-}
+// Búsqueda con debounce: se dispara cuando el usuario deja de teclear
+const buscarClientes = debounce(() => cargarClientes(true), 450);
 
+// Cargar más respeta estados (sin duplicar)
 function cargarMasClientes() {
-  cargarClientes();
+  if (isLoading || !hasMore) return;
+  cargarClientes(false);
 }
 
-function verPagos(id) {
-  window.location.href = `pagos.php?id=${id}`;
-}
-
+// =========================
+// Sidebar
+// =========================
 function toggleSidebar() {
   const sidebar = document.getElementById("sidebar");
   const backdrop = document.getElementById("sidebar-backdrop");
@@ -84,6 +141,9 @@ function closeSidebar() {
   document.getElementById("btn-sidebar").classList.remove("hidden");
 }
 
+// =========================
+// Ver pagos (anual)
+// =========================
 let clienteActual = 0;
 
 function abrirVerPagos(id) {
@@ -99,9 +159,9 @@ function abrirVerPagos(id) {
   }
   select.value = añoActual;
 
-
   cargarPagosAnuales();
 }
+
 function cargarPagosAnuales() {
   const año = document.getElementById("vp-anio").value;
 
@@ -117,45 +177,45 @@ function cargarPagosAnuales() {
 
     const pagosPorMes = {};
     data.forEach(pago => {
-      const mes = parseInt(pago.fecha.split("-")[1], 10) - 1; // ← Corrección aquí
+      const mes = parseInt(pago.fecha.split("-")[1], 10) - 1; // 0..11
       pagosPorMes[mes] = pago;
     });
 
     const meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
 
     meses.forEach((mes, i) => {
-  if (pagosPorMes[i]) {
-    const pago = pagosPorMes[i];
+      if (pagosPorMes[i]) {
+        const pago = pagosPorMes[i];
 
-    const descuento = parseFloat(pago.descuento || 0);
-    const montoFinal = parseFloat(pago.pago) + descuento;
+        const descuento = parseFloat(pago.descuento || 0);
+        const montoFinal = parseFloat(pago.pago) + descuento;
 
-    // Determinar clase de color según tipo
-    let colorClase = "bg-green-600 hover:bg-green-700";
-    if (descuento > 0) {
-      colorClase = "bg-orange-600 hover:bg-orange-700";
-    } else if (descuento < 0) {
-      colorClase = "bg-blue-600 hover:bg-blue-700";
-    }
+        let colorClase = "bg-green-600 hover:bg-green-700";
+        if (descuento > 0) {
+          colorClase = "bg-orange-600 hover:bg-orange-700";
+        } else if (descuento < 0) {
+          colorClase = "bg-blue-600 hover:bg-blue-700";
+        }
 
-    const btn = document.createElement("div");
-    btn.className = `${colorClase} p-3 rounded text-center transition-all font-bold text-white cursor-pointer`;
-    btn.innerHTML = `${mes}<br>$${montoFinal}`;
-    btn.onclick = () => solicitarEliminacion(mes, montoFinal, pago.idpago);
-    lista.appendChild(btn);
+        const btn = document.createElement("div");
+        btn.className = `${colorClase} p-3 rounded text-center transition-all font-bold text-white cursor-pointer`;
+        btn.innerHTML = `${mes}<br>$${montoFinal}`;
+        btn.onclick = () => solicitarEliminacion(mes, montoFinal, pago.idpago);
+        lista.appendChild(btn);
 
-  } else {
-    const div = document.createElement("div");
-    div.className = "bg-gray-700 p-3 rounded text-center text-white";
-    div.textContent = mes;
-    lista.appendChild(div);
-  }
-});
-
+      } else {
+        const div = document.createElement("div");
+        div.className = "bg-gray-700 p-3 rounded text-center text-white";
+        div.textContent = mes;
+        lista.appendChild(div);
+      }
+    });
   });
 }
 
-
+// =========================
+// Solicitud / eliminación de pago
+// =========================
 let idPagoSeleccionado = 0;
 
 function abrirSolicitudEliminacion(idpago, mes, monto) {
@@ -190,7 +250,7 @@ function enviarSolicitudEliminacion() {
 }
 
 function solicitarEliminacion(mes, monto, idpago) {
-  if (tipoUsuario === 'root' || tipoUsuario === 'admin') {
+  if (typeof tipoUsuario !== 'undefined' && (tipoUsuario === 'root' || tipoUsuario === 'admin')) {
     Swal.fire({
       title: '¿Eliminar pago?',
       text: `Mes: ${mes}\nMonto: $${monto}`,
@@ -213,7 +273,6 @@ function solicitarEliminacion(mes, monto, idpago) {
       }
     });
   } else {
-    // Si NO es admin o root, abrir el modal normal de motivo
     document.getElementById("se-mes").textContent = mes;
     document.getElementById("se-monto").textContent = `${monto}`;
     document.getElementById("se-motivo").value = '';
@@ -222,8 +281,9 @@ function solicitarEliminacion(mes, monto, idpago) {
   }
 }
 
-
-
+// =========================
+/* Generar pago */
+// =========================
 function abrirGenerarPago(id) {
   clienteActual = id;
   document.getElementById("gp-id").textContent = id;
@@ -257,7 +317,7 @@ function abrirGenerarPago(id) {
     const hoy = new Date();
     const yyyyMM = hoy.toISOString().slice(0, 7);
     fechaInput.value = "";
-    //fechaInput.min = yyyyMM;
+    // fechaInput.min = yyyyMM; // si lo necesitas estricto, descomenta
 
     if (data.pagado) {
       document.getElementById("info-pagado").classList.remove("hidden");
@@ -310,6 +370,7 @@ function registrarPago(yyyymm) {
   });
 }
 
+// Exclusión mutua de descuentos
 ["recargo", "descuento", "descuento-especial"].forEach(id => {
   const el = document.getElementById(id);
   if (el) {
@@ -330,24 +391,22 @@ function cerrarModal(id) {
   document.getElementById(id).classList.add('hidden');
 }
 
-cargarClientes();
-
-
-
+// =========================
+// Ticket (JSPDF)
+// =========================
 function generarTicket(datos) {
-
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
-    format: [58, 200] // tamaño ticket
+    format: [58, 200]
   });
 
   let y = 8;
 
   if (logoBase64) {
     const imgWidth = 48;
-    const imgHeight = imgWidth * (332 / 590); // proporción original del logo
+    const imgHeight = imgWidth * (332 / 590);
     doc.addImage(logoBase64, 'PNG', 5, y, imgWidth, imgHeight);
     y += imgHeight + 5;
   }
@@ -380,12 +439,10 @@ function generarTicket(datos) {
   y = centerBlock('Localidad:', datos.localidad, y);
   y = centerBlock('Paquete:', datos.paquete, y);
 
-  // Cálculos de pago
   const pagoBase = parseFloat(datos.pago) || 0;
   const descuento = parseFloat(datos.descuento) || 0;
   const total = pagoBase + descuento;
 
-  // Mostrar desglose
   y = centerBlock('Mensualidad:', `$${pagoBase.toFixed(2)}`, y);
 
   if (descuento !== 0) {
@@ -396,7 +453,6 @@ function generarTicket(datos) {
 
   y = centerBlock('Total:', `$${total.toFixed(2)}`, y);
 
-  // Mensajes finales
   y += 5;
   center('Gracias por su preferencia!', y); y += 6;
 
@@ -417,9 +473,7 @@ function generarTicket(datos) {
   window.open(doc.output('bloburl'), '_blank');
 }
 
-
 let logoBase64 = "";
-
 fetch("includes/logo.txt")
   .then(res => res.text())
   .then(data => {
@@ -430,14 +484,30 @@ fetch("includes/logo.txt")
     console.error("Error al cargar el logo:", err);
   });
 
+// =========================
+// Bootstrap de eventos y exports
+// =========================
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById("buscador");
+  if (input) {
+    input.addEventListener('input', buscarClientes);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        buscarClientes.cancel?.();
+        cargarClientes(true); // búsqueda inmediata con Enter
+      }
+    });
+  }
+  cargarClientes(true); // carga inicial
+});
 
-
+// Exponer funciones usadas en HTML
 window.abrirGenerarPago = abrirGenerarPago;
 window.abrirVerPagos = abrirVerPagos;
 window.confirmarPagoDelMes = confirmarPagoDelMes;
 window.confirmarPagoAdelantado = confirmarPagoAdelantado;
 window.cerrarModal = cerrarModal;
-window.buscarClientes = buscarClientes;
+window.buscarClientes = () => cargarClientes(true); // por si tienes onclick en HTML
 window.toggleSidebar = toggleSidebar;
 window.closeSidebar = closeSidebar;
 window.abrirSolicitudEliminacion = abrirSolicitudEliminacion;
