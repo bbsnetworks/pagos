@@ -576,3 +576,9 @@ Array
 )
 <script>window.close()</script>
 
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.99.100&ip_nodo=192.168.99.1&nodo_user=admin&nodo_password=netmanwu&folio=1565
+Respuesta: 
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.99.101&ip_nodo=192.168.99.1&nodo_user=admin&nodo_password=netmanwu&folio=1565
+Respuesta: 
+

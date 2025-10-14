@@ -1,53 +1,43 @@
-// =========================
-// Listado / Búsqueda clientes
-// =========================
+'use strict';
+
+/* =========================================================
+ *  Estado global y utilidades
+ * =======================================================*/
 let offset = 0;
 const limit = 20;
 
-let isLoading = false;
-let hasMore = true;
-let inFlightController = null;
-let lastRequestId = 0;
+let inFlightController = null; // para abortar peticiones de clientes
+const $ = (id) => document.getElementById(id);
 
-// Debounce simple
 function debounce(fn, delay = 450) {
   let t;
-  const wrapped = (...args) => {
-    clearTimeout(t);
-    t = setTimeout(() => fn(...args), delay);
-  };
-  wrapped.cancel = () => clearTimeout(t);
-  return wrapped;
+  const d = (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+  d.cancel = () => clearTimeout(t);
+  return d;
 }
 
-function getSearchValue() {
-  const el = document.getElementById("buscador");
-  return (el?.value || "").trim();
-}
+// Rol del usuario (para eliminar directo o solicitar)
+const tipoUsuario =
+  (window.TIPO_USUARIO && String(window.TIPO_USUARIO)) ||
+  (document.body?.dataset?.tipo ? String(document.body.dataset.tipo) : 'pagos');
 
+/* =========================================================
+ *  Lista de clientes (server-side, con debounce + abort)
+ * =======================================================*/
 async function cargarClientes(reset = false) {
-  // Cancelar petición anterior si existe (evita duplicados en redes lentas)
+  if (reset) {
+    offset = 0;
+    $("lista-clientes").innerHTML = '';
+  }
+
+  // Abortar la anterior si existía
   if (inFlightController) {
     inFlightController.abort();
     inFlightController = null;
   }
-
-  if (reset) {
-    offset = 0;
-    hasMore = true;
-    document.getElementById("lista-clientes").innerHTML = '';
-  }
-
-  if (!hasMore && !reset) return;
-  if (isLoading) return;
-
-  isLoading = true;
-  const searchNow = getSearchValue();
-  const requestId = ++lastRequestId;
+  inFlightController = new AbortController();
 
   try {
-    inFlightController = new AbortController();
-
     const res = await fetch('php/clientes.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -55,18 +45,13 @@ async function cargarClientes(reset = false) {
       body: JSON.stringify({
         offset,
         limit,
-        search: searchNow
+        search: $("buscador")?.value ?? ''
       })
     });
 
-    // Si esta respuesta no es la más reciente, la ignoramos
-    if (requestId !== lastRequestId) return;
-
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
     const data = await res.json();
 
-    const cont = document.getElementById("lista-clientes");
     data.forEach(cliente => {
       const div = document.createElement("div");
       div.className = "p-4 bg-gray-800 border border-gray-700 rounded flex justify-between items-center";
@@ -85,45 +70,33 @@ async function cargarClientes(reset = false) {
           <button onclick="abrirGenerarPago(${cliente.id})" class="px-4 py-2 bg-green-600 rounded hover:bg-green-700">Generar pago</button>
         </div>
       `;
-      cont.appendChild(div);
+      $("lista-clientes").appendChild(div);
     });
 
-    // Paginación: avanzar por lo realmente recibido
-    offset += data.length;
-    hasMore = data.length === limit;
-
+    offset += limit;
   } catch (error) {
     if (error?.name !== 'AbortError') {
       console.error(error);
       Swal.fire('Error', 'No se pudo cargar la lista de clientes', 'error');
     }
   } finally {
-    if (requestId === lastRequestId) {
-      isLoading = false;
-      inFlightController = null;
-    }
+    inFlightController = null;
   }
 }
 
-// Búsqueda con debounce: se dispara cuando el usuario deja de teclear
-const buscarClientes = debounce(() => cargarClientes(true), 450);
+// Debounce de búsqueda: llamas a buscarClientes() tal como lo tenías
+const _buscarDebounced = debounce(() => cargarClientes(true), 450);
+function buscarClientes() { _buscarDebounced(); }
+function cargarMasClientes() { cargarClientes(false); }
 
-// Cargar más respeta estados (sin duplicar)
-function cargarMasClientes() {
-  if (isLoading || !hasMore) return;
-  cargarClientes(false);
-}
-
-// =========================
-// Sidebar
-// =========================
+/* =========================================================
+ *  Sidebar
+ * =======================================================*/
 function toggleSidebar() {
-  const sidebar = document.getElementById("sidebar");
-  const backdrop = document.getElementById("sidebar-backdrop");
-  const btn = document.getElementById("btn-sidebar");
-
+  const sidebar = $("sidebar");
+  const backdrop = $("sidebar-backdrop");
+  const btn = $("btn-sidebar");
   const isVisible = !sidebar.classList.contains("-translate-x-full");
-
   if (isVisible) {
     sidebar.classList.add("-translate-x-full");
     backdrop.classList.add("hidden");
@@ -134,36 +107,79 @@ function toggleSidebar() {
     btn.classList.add("hidden");
   }
 }
-
 function closeSidebar() {
-  document.getElementById("sidebar").classList.add("-translate-x-full");
-  document.getElementById("sidebar-backdrop").classList.add("hidden");
-  document.getElementById("btn-sidebar").classList.remove("hidden");
+  $("sidebar").classList.add("-translate-x-full");
+  $("sidebar-backdrop").classList.add("hidden");
+  $("btn-sidebar").classList.remove("hidden");
 }
 
-// =========================
-// Ver pagos (anual)
-// =========================
+/* =========================================================
+ *  Ver pagos (modal) + Solicitud/Eliminación
+ * =======================================================*/
 let clienteActual = 0;
+let idPagoSeleccionado = 0;
 
 function abrirVerPagos(id) {
   clienteActual = id;
-  document.getElementById('vp-id').textContent = id;
-  document.getElementById('modal-ver-pagos').classList.remove('hidden');
+  $('vp-id').textContent = id;
+  $('modal-ver-pagos').classList.remove('hidden');
 
+  // Select de años
   const añoActual = new Date().getFullYear();
-  const select = document.getElementById("vp-anio");
+  const select = $('vp-anio');
   select.innerHTML = '';
   for (let i = añoActual + 3; i >= añoActual - 5; i--) {
-    select.innerHTML += `<option value="${i}">${i}</option>`;
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = i;
+    select.appendChild(opt);
   }
   select.value = añoActual;
 
+  // refrescar al cambiar año
+  select.onchange = cargarPagosAnuales;
+
+  // pintar
   cargarPagosAnuales();
 }
 
+function normalizaPagosRespuesta(data) {
+  // Acepta dos formatos:
+  // 1) [1, 2, 3] => meses (1-12)
+  // 2) [{fecha:'2025-05-01', pago:..., descuento:..., idpago:...}, ...]
+  const pagosPorMes = {}; // índice 0..11 => objeto pago o true
+  if (!Array.isArray(data)) return pagosPorMes;
+
+  data.forEach(item => {
+    if (typeof item === 'number') {
+      const idx = Math.max(1, Math.min(12, item)) - 1;
+      pagosPorMes[idx] = { mes: idx + 1 };
+    } else if (item && typeof item === 'object') {
+      let mesNum = null;
+
+      if (item.mes) {
+        mesNum = parseInt(item.mes, 10);
+      } else if (item.fecha) {
+        const m = String(item.fecha).split('-')[1];
+        mesNum = parseInt(m, 10);
+      }
+
+      if (Number.isInteger(mesNum)) {
+        const idx = Math.max(1, Math.min(12, mesNum)) - 1;
+        pagosPorMes[idx] = {
+          mes: idx + 1,
+          pago: parseFloat(item.pago ?? 0),
+          descuento: parseFloat(item.descuento ?? 0),
+          idpago: item.idpago ?? item.id ?? null
+        };
+      }
+    }
+  });
+
+  return pagosPorMes;
+}
+
 function cargarPagosAnuales() {
-  const año = document.getElementById("vp-anio").value;
+  const año = $('vp-anio').value;
 
   fetch('php/pagos_cliente.php', {
     method: 'POST',
@@ -172,62 +188,56 @@ function cargarPagosAnuales() {
   })
   .then(r => r.json())
   .then(data => {
-    const lista = document.getElementById("vp-lista");
+    const lista = $('vp-lista');
     lista.innerHTML = '';
 
-    const pagosPorMes = {};
-    data.forEach(pago => {
-      const mes = parseInt(pago.fecha.split("-")[1], 10) - 1; // 0..11
-      pagosPorMes[mes] = pago;
-    });
-
+    const pagosPorMes = normalizaPagosRespuesta(data);
     const meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
 
-    meses.forEach((mes, i) => {
-      if (pagosPorMes[i]) {
-        const pago = pagosPorMes[i];
+    meses.forEach((mesTexto, i) => {
+      const info = pagosPorMes[i];
 
-        const descuento = parseFloat(pago.descuento || 0);
-        const montoFinal = parseFloat(pago.pago) + descuento;
+      if (info) {
+        const pagoBase = isNaN(info.pago) ? 0 : info.pago;
+        const ajuste = isNaN(info.descuento) ? 0 : info.descuento;
+        const montoFinal = pagoBase + ajuste;
 
+        // color según ajuste
         let colorClase = "bg-green-600 hover:bg-green-700";
-        if (descuento > 0) {
-          colorClase = "bg-orange-600 hover:bg-orange-700";
-        } else if (descuento < 0) {
-          colorClase = "bg-blue-600 hover:bg-blue-700";
-        }
+        if (ajuste > 0) colorClase = "bg-orange-600 hover:bg-orange-700";   // recargo
+        if (ajuste < 0) colorClase = "bg-blue-600 hover:bg-blue-700";       // descuento
 
         const btn = document.createElement("div");
         btn.className = `${colorClase} p-3 rounded text-center transition-all font-bold text-white cursor-pointer`;
-        btn.innerHTML = `${mes}<br>$${montoFinal}`;
-        btn.onclick = () => solicitarEliminacion(mes, montoFinal, pago.idpago);
-        lista.appendChild(btn);
+        btn.innerHTML = `${mesTexto}<br>$${montoFinal.toFixed(2)}`;
 
+        btn.onclick = () => solicitarEliminacion(mesTexto, montoFinal.toFixed(2), info.idpago);
+        lista.appendChild(btn);
       } else {
         const div = document.createElement("div");
         div.className = "bg-gray-700 p-3 rounded text-center text-white";
-        div.textContent = mes;
+        div.textContent = mesTexto;
         lista.appendChild(div);
       }
     });
+  })
+  .catch(err => {
+    console.error(err);
+    Swal.fire('Error', 'No se pudieron cargar los pagos del año seleccionado', 'error');
   });
 }
 
-// =========================
-// Solicitud / eliminación de pago
-// =========================
-let idPagoSeleccionado = 0;
-
+// Modal de solicitud (para usuarios no admin/root)
 function abrirSolicitudEliminacion(idpago, mes, monto) {
   idPagoSeleccionado = idpago;
-  document.getElementById("se-mes").textContent = mes;
-  document.getElementById("se-monto").textContent = monto;
-  document.getElementById("se-motivo").value = '';
-  document.getElementById("modal-solicitud").classList.remove('hidden');
+  $("se-mes").textContent = mes;
+  $("se-monto").textContent = monto;
+  $("se-motivo").value = '';
+  $("modal-solicitud").classList.remove('hidden');
 }
 
 function enviarSolicitudEliminacion() {
-  const motivo = document.getElementById("se-motivo").value.trim();
+  const motivo = $("se-motivo").value.trim();
   if (!motivo) {
     Swal.fire('Error', 'Debes escribir un motivo', 'error');
     return;
@@ -245,15 +255,23 @@ function enviarSolicitudEliminacion() {
   .then(r => r.json())
   .then(data => {
     Swal.fire(data.ok ? 'Éxito' : 'Error', data.message, data.ok ? 'success' : 'error');
-    if (data.ok) cerrarModal('modal-solicitud');
+    if (data.ok) {
+      cerrarModal('modal-solicitud');
+      cargarPagosAnuales();
+    }
   });
 }
 
 function solicitarEliminacion(mes, monto, idpago) {
-  if (typeof tipoUsuario !== 'undefined' && (tipoUsuario === 'root' || tipoUsuario === 'admin')) {
+  if (!idpago) {
+    Swal.fire('Atención', 'No se encontró el ID del pago para este mes.', 'warning');
+    return;
+  }
+
+  if (tipoUsuario === 'root' || tipoUsuario === 'admin') {
     Swal.fire({
       title: '¿Eliminar pago?',
-      text: `Mes: ${mes}\nMonto: $${monto}`,
+      html: `Mes: <b>${mes}</b><br>Monto: <b>$${monto}</b>`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
@@ -263,48 +281,39 @@ function solicitarEliminacion(mes, monto, idpago) {
         fetch('php/eliminar_pago.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idpago: idpago })
+          body: JSON.stringify({ idpago })
         })
         .then(r => r.json())
         .then(data => {
           Swal.fire(data.ok ? 'Eliminado' : 'Error', data.message, data.ok ? 'success' : 'error');
-          if (data.ok) cargarPagosAnuales(); // refrescar vista
+          if (data.ok) cargarPagosAnuales();
         });
       }
     });
   } else {
-    document.getElementById("se-mes").textContent = mes;
-    document.getElementById("se-monto").textContent = `${monto}`;
-    document.getElementById("se-motivo").value = '';
-    idPagoSeleccionado = idpago;
-    document.getElementById("modal-solicitud").classList.remove("hidden");
+    abrirSolicitudEliminacion(idpago, mes, monto);
   }
 }
 
-// =========================
-/* Generar pago */
-// =========================
+/* =========================================================
+ *  Generar pago (modal) + ticket
+ * =======================================================*/
 function abrirGenerarPago(id) {
   clienteActual = id;
-  document.getElementById("gp-id").textContent = id;
-  document.getElementById("modal-generar-pago").classList.remove("hidden");
+  $("gp-id").textContent = id;
+  $("modal-generar-pago").classList.remove("hidden");
 
-  document.getElementById("btn-pago-del-mes").classList.add("hidden");
-  document.getElementById("info-pagado").classList.add("hidden");
-  document.getElementById("adelantado").classList.add("hidden");
+  $("btn-pago-del-mes").classList.add("hidden");
+  $("info-pagado").classList.add("hidden");
+  $("adelantado").classList.add("hidden");
 
   // Reset checkboxes y campos de descuento
-  ["recargo", "descuento", "descuento-especial"].forEach(id => {
-    const el = document.getElementById(id);
+  ["recargo", "descuento", "descuento-especial"].forEach(cid => {
+    const el = $(cid);
     if (el) el.checked = false;
   });
-  ["descuento-especial-monto"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.value = '';
-      el.disabled = true;
-    }
-  });
+  const esp = $("descuento-especial-monto");
+  if (esp) { esp.value = ''; esp.disabled = true; }
 
   fetch('php/verificar_mes_actual.php', {
     method: 'POST',
@@ -313,17 +322,17 @@ function abrirGenerarPago(id) {
   })
   .then(r => r.json())
   .then(data => {
-    const fechaInput = document.getElementById("adelantado-fecha");
+    const fechaInput = $("adelantado-fecha");
     const hoy = new Date();
     const yyyyMM = hoy.toISOString().slice(0, 7);
     fechaInput.value = "";
-    // fechaInput.min = yyyyMM; // si lo necesitas estricto, descomenta
+    // fechaInput.min = yyyyMM; // si quieres limitar hacia atrás, descomenta
 
     if (data.pagado) {
-      document.getElementById("info-pagado").classList.remove("hidden");
-      document.getElementById("adelantado").classList.remove("hidden");
+      $("info-pagado").classList.remove("hidden");
+      $("adelantado").classList.remove("hidden");
     } else {
-      document.getElementById("btn-pago-del-mes").classList.remove("hidden");
+      $("btn-pago-del-mes").classList.remove("hidden");
     }
   });
 }
@@ -331,24 +340,20 @@ function abrirGenerarPago(id) {
 function confirmarPagoDelMes() {
   registrarPago(new Date().toISOString().slice(0, 7));
 }
-
 function confirmarPagoAdelantado() {
-  const fecha = document.getElementById("adelantado-fecha").value;
-  if (!fecha) {
-    Swal.fire('Error', 'Selecciona un mes válido', 'error');
-    return;
-  }
+  const fecha = $("adelantado-fecha").value;
+  if (!fecha) return Swal.fire('Error', 'Selecciona un mes válido', 'error');
   registrarPago(fecha);
 }
 
 function registrarPago(yyyymm) {
-  const tipo = document.querySelector('input[name="tipo"]:checked').value;
+  const tipo = document.querySelector('input[name="tipo"]:checked')?.value ?? '0';
   let descuento = 0;
 
-  if (document.getElementById("recargo").checked) descuento = 50;
-  else if (document.getElementById("descuento").checked) descuento = -50;
-  else if (document.getElementById("descuento-especial").checked) {
-    const monto = parseFloat(document.getElementById("descuento-especial-monto").value) || 0;
+  if ($("recargo").checked) descuento = 50;
+  else if ($("descuento").checked) descuento = -50;
+  else if ($("descuento-especial").checked) {
+    const monto = parseFloat($("descuento-especial-monto").value) || 0;
     descuento = -monto;
   }
 
@@ -358,77 +363,69 @@ function registrarPago(yyyymm) {
     body: JSON.stringify({
       idcliente: clienteActual,
       fecha: yyyymm + '-01',
-      tipo: tipo,
-      descuento: descuento
+      tipo,
+      descuento
     })
   })
   .then(r => r.json())
   .then(resp => {
     Swal.fire(resp.ok ? 'Éxito' : 'Error', resp.message, resp.ok ? 'success' : 'error');
-    if (resp.ok) cerrarModal('modal-generar-pago');
-    generarTicket(resp.ticket);
+    if (resp.ok) {
+      cerrarModal('modal-generar-pago');
+      if (resp.ticket) generarTicket(resp.ticket);
+      // si estabas viendo el modal de ver pagos, refresca:
+      if (!($('modal-ver-pagos')?.classList.contains('hidden'))) {
+        cargarPagosAnuales();
+      }
+    }
   });
 }
 
-// Exclusión mutua de descuentos
+// Exclusividad de checkboxes
 ["recargo", "descuento", "descuento-especial"].forEach(id => {
-  const el = document.getElementById(id);
+  const el = $(id);
   if (el) {
     el.addEventListener('change', () => {
       ["recargo", "descuento", "descuento-especial"].forEach(otherId => {
         if (id !== otherId) {
-          const other = document.getElementById(otherId);
-          if (other) other.checked = false;
+          const other = $(otherId); if (other) other.checked = false;
         }
       });
-      const esp = document.getElementById("descuento-especial-monto");
+      const esp = $("descuento-especial-monto");
       if (esp) esp.disabled = (id !== "descuento-especial" || !el.checked);
     });
   }
 });
 
-function cerrarModal(id) {
-  document.getElementById(id).classList.add('hidden');
-}
+/* =========================================================
+ *  Utilidades de modales
+ * =======================================================*/
+function cerrarModal(id) { $(id)?.classList.add('hidden'); }
 
-// =========================
-// Ticket (JSPDF)
-// =========================
+/* =========================================================
+ *  Ticket (igual al tuyo)
+ * =======================================================*/
 function generarTicket(datos) {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: [58, 200]
-  });
-
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:[58,200] });
   let y = 8;
 
   if (logoBase64) {
-    const imgWidth = 48;
-    const imgHeight = imgWidth * (332 / 590);
+    const imgWidth = 48, imgHeight = imgWidth * (332 / 590);
     doc.addImage(logoBase64, 'PNG', 5, y, imgWidth, imgHeight);
     y += imgHeight + 5;
   }
-
-  const center = (text, y, size = 9, bold = false) => {
-    doc.setFontSize(size);
-    doc.setFont(undefined, bold ? 'bold' : 'normal');
-    const textWidth = doc.getTextWidth(text);
-    const x = (58 - textWidth) / 2;
-    doc.text(text, x, y);
+  const center = (text, y, size=9, bold=false) => {
+    doc.setFontSize(size); doc.setFont(undefined, bold ? 'bold' : 'normal');
+    const x = (58 - doc.getTextWidth(text)) / 2; doc.text(text, x, y);
   };
-
   const centerBlock = (label, content, y) => {
     const lines = doc.splitTextToSize(content, 48);
     center(label, y, 8, true); y += 5;
-    lines.forEach(line => {
-      center(line, y, 8); y += 4;
-    });
+    lines.forEach(line => { center(line, y, 8); y += 4; });
     return y;
   };
 
-  // Datos generales
   center('TEKNE SEND.4', y); y += 5;
   center('RFC: TSE230302694', y); y += 5;
   center(`Fecha: ${datos.fecha}`, y); y += 8;
@@ -444,21 +441,16 @@ function generarTicket(datos) {
   const total = pagoBase + descuento;
 
   y = centerBlock('Mensualidad:', `$${pagoBase.toFixed(2)}`, y);
-
   if (descuento !== 0) {
     const tipoAjuste = descuento > 0 ? 'Recargo' : 'Descuento';
     const simbolo = descuento > 0 ? '+' : '-';
     y = centerBlock(tipoAjuste + ':', `${simbolo}$${Math.abs(descuento).toFixed(2)}`, y);
   }
-
   y = centerBlock('Total:', `$${total.toFixed(2)}`, y);
 
-  y += 5;
-  center('Gracias por su preferencia!', y); y += 6;
-
+  y += 5; center('Gracias por su preferencia!', y); y += 6;
   center('Dudas o Aclaraciones al:', y); y += 5;
   center('4451533504', y); y += 6;
-
   center('Horario de atención:', y); y += 5;
   center('Lunes a Viernes', y); y += 5;
   center('11:00 a.m. - 6:00 p.m.', y); y += 5;
@@ -466,7 +458,6 @@ function generarTicket(datos) {
 
   y = centerBlock('Atendió:', datos.user, y);
   center('bbsnetworks.net', y); y += 8;
-
   center('--------GRACIAS POR SU PAGO--------', y, 8);
 
   doc.autoPrint();
@@ -474,40 +465,18 @@ function generarTicket(datos) {
 }
 
 let logoBase64 = "";
-fetch("includes/logo.txt")
-  .then(res => res.text())
-  .then(data => {
-    logoBase64 = data;
-    console.log("Logo cargado correctamente.");
-  })
-  .catch(err => {
-    console.error("Error al cargar el logo:", err);
-  });
+fetch("includes/logo.txt").then(res => res.text()).then(data => { logoBase64 = data; })
+  .catch(err => console.error("Error al cargar el logo:", err));
 
-// =========================
-// Bootstrap de eventos y exports
-// =========================
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById("buscador");
-  if (input) {
-    input.addEventListener('input', buscarClientes);
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        buscarClientes.cancel?.();
-        cargarClientes(true); // búsqueda inmediata con Enter
-      }
-    });
-  }
-  cargarClientes(true); // carga inicial
-});
-
-// Exponer funciones usadas en HTML
+/* =========================================================
+ *  Exponer a global (si usas atributos HTML)
+ * =======================================================*/
 window.abrirGenerarPago = abrirGenerarPago;
 window.abrirVerPagos = abrirVerPagos;
 window.confirmarPagoDelMes = confirmarPagoDelMes;
 window.confirmarPagoAdelantado = confirmarPagoAdelantado;
 window.cerrarModal = cerrarModal;
-window.buscarClientes = () => cargarClientes(true); // por si tienes onclick en HTML
+window.buscarClientes = buscarClientes;
 window.toggleSidebar = toggleSidebar;
 window.closeSidebar = closeSidebar;
 window.abrirSolicitudEliminacion = abrirSolicitudEliminacion;
@@ -515,3 +484,12 @@ window.enviarSolicitudEliminacion = enviarSolicitudEliminacion;
 window.solicitarEliminacion = solicitarEliminacion;
 window.cargarPagosAnuales = cargarPagosAnuales;
 window.cargarMasClientes = cargarMasClientes;
+
+/* =========================================================
+ *  Arranque
+ * =======================================================*/
+document.addEventListener('DOMContentLoaded', () => {
+  // Si tu input no tiene oninput en HTML, puedes descomentar:
+  // $("buscador")?.addEventListener('input', buscarClientes);
+  cargarClientes(true);
+});
