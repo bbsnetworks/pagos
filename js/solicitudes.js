@@ -43,13 +43,13 @@ async function cargarSolicitudes(reset = false) {
         <p><strong>Pago ID:</strong> ${sol.idpago}</p>
         <p><strong>Motivo:</strong> ${sol.motivo}</p>
         <p><strong>Solicitado por:</strong> ${sol.solicitado_por}</p>
-        <p><strong>Fecha:</strong> ${sol.fecha}</p>
+        <p><strong>Fecha:</strong> ${sol.fecha_solicitud ?? sol.fecha ?? sol.fecha_pago ?? '—'}</p>
         <p><strong>Mes eliminado:</strong> ${formatearMes(sol.fecha_pago)}</p>
         <p><strong>Estado:</strong> ${sol.estado}</p>
         ${sol.estado === 'pendiente' ? `
           <div class="mt-3 flex flex-wrap gap-2">
-            <button class="bg-green-600 px-4 py-2 text-sm sm:text-base rounded hover:bg-green-700 transition" onclick="aprobarSolicitud(${sol.id}, ${sol.idpago})">✅ Aprobar</button>
-            <button class="bg-red-600 px-4 py-2 text-sm sm:text-base rounded hover:bg-red-700 transition" onclick="rechazarSolicitud(${sol.id})">❌ Rechazar</button>
+            <button class="bg-green-600 px-4 py-2 text-sm sm:text-base rounded hover:bg-green-700 transition" onclick="aprobarSolicitud(${sol.idsolicitud}, ${sol.idpago})">✅ Aprobar</button>
+            <button class="bg-red-600 px-4 py-2 text-sm sm:text-base rounded hover:bg-red-700 transition" onclick="rechazarSolicitud(${sol.idsolicitud})">❌ Rechazar</button>
           </div>
         ` : ''}
       `;
@@ -91,7 +91,7 @@ async function aprobarSolicitud(idsolicitud, idpago) {
 
     const data = await res.json();
     Swal.fire(data.ok ? 'Éxito' : 'Error', data.message, data.ok ? 'success' : 'error');
-    if (data.ok) cargarSolicitudes();
+    if (data.ok) location.reload();
   }
 }
 
@@ -112,7 +112,8 @@ async function rechazarSolicitud(idsolicitud) {
 
     const data = await res.json();
     Swal.fire(data.ok ? 'Rechazada' : 'Error', data.message, data.ok ? 'success' : 'error');
-    if (data.ok) cargarSolicitudes();
+    if (data.ok) location.reload();
+
   }
 }
 function toggleSidebar() {

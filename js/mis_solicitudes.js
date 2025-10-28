@@ -1,25 +1,37 @@
 'use strict';
 
 let debounceTimer;
-let fetchCtrl = null; // AbortController para cargarSolicitudes()
+let fetchCtrl = null;
 
 const $ = (id) => document.getElementById(id);
 
-// ===== Filtros =====
-$("filtro-busqueda").addEventListener("input", () => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => cargarSolicitudes(), 400);
-});
-$("select-mes").addEventListener("change", cargarSolicitudes);
-$("select-anio").addEventListener("change", cargarSolicitudes);
-$("select-estado").addEventListener("change", cargarSolicitudes); // << NUEVO
+// ==== Enlazar filtros de forma segura ====
+function bindFiltros() {
+  const inputBusqueda = $("filtro-busqueda");
+  const selMes        = $("select-mes");
+  const selAnio       = $("select-anio");
+  const selEstado     = $("select-estado"); // opcional, no existe en tu HTML actual
+
+  if (inputBusqueda) {
+    inputBusqueda.addEventListener("input", () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => cargarSolicitudes(), 400);
+    });
+  }
+
+  if (selMes)   selMes.addEventListener("change", cargarSolicitudes);
+  if (selAnio)  selAnio.addEventListener("change", cargarSolicitudes);
+  if (selEstado) selEstado.addEventListener("change", cargarSolicitudes);
+}
 
 function generarOpcionesFecha() {
   const selectMes = $("select-mes");
   const selectAnio = $("select-anio");
-  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  if (!selectMes || !selectAnio) return;
 
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const hoy = new Date();
+
   selectMes.innerHTML = '';
   for (let i = 0; i < 12; i++) {
     const valor = i + 1;
@@ -35,15 +47,16 @@ function generarOpcionesFecha() {
 
 // ===== Listado =====
 async function cargarSolicitudes() {
-  const mes    = $("select-mes").value;
-  const anio   = $("select-anio").value;
-  const estado = $("select-estado").value; // 'pendiente' | 'aprobada' | 'rechazada' | 'todas'
-  const search = $("filtro-busqueda").value.trim();
-
   const contenedor = $("contenedor-solicitudes");
+  if (!contenedor) return;
+
+  const mes    = $("select-mes")?.value ?? '';
+  const anio   = $("select-anio")?.value ?? '';
+  const estado = $("select-estado")?.value ?? 'todas';
+  const search = $("filtro-busqueda")?.value?.trim() ?? '';
+
   contenedor.innerHTML = '<p class="text-gray-400 text-center">Cargando…</p>';
 
-  // Cancela carga anterior
   if (fetchCtrl) { fetchCtrl.abort(); fetchCtrl = null; }
   fetchCtrl = new AbortController();
 
@@ -53,7 +66,7 @@ async function cargarSolicitudes() {
       headers: { 'Content-Type': 'application/json' },
       signal: fetchCtrl.signal,
       cache: 'no-store',
-      body: JSON.stringify({ mes, anio, estado, search }) // << PASAMOS ESTADO
+      body: JSON.stringify({ mes, anio, estado, search })
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -136,14 +149,14 @@ async function aprobarSolicitud(idsolicitud) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     cache: 'no-store',
-    body: JSON.stringify({ idsolicitud, accion: 'aprobar' }) // << endpoint real
+    body: JSON.stringify({ idsolicitud, accion: 'aprobar' })
   });
   const data = await res.json();
   Swal.fire(data.ok ? 'Aprobada' : 'Error', data.message, data.ok ? 'success' : 'error');
 
   if (data.ok) {
-    quitarCard(idsolicitud);   // optimista
-    await cargarSolicitudes(); // y sincroniza con backend (filtrando por estado)
+    quitarCard(idsolicitud);
+    await cargarSolicitudes();
   }
 }
 
@@ -185,7 +198,7 @@ async function eliminarSolicitud(idsolicitud) {
   }
 }
 
-// ===== Helpers =====
+// ==== Confirmación ====
 async function confirmar(title, text) {
   const r = await Swal.fire({
     title, text, icon: 'warning',
@@ -196,13 +209,14 @@ async function confirmar(title, text) {
   return r.isConfirmed;
 }
 
-// ===== Arranque =====
-window.onload = () => {
+// ==== Arranque seguro ====
+document.addEventListener('DOMContentLoaded', () => {
+  bindFiltros();
   generarOpcionesFecha();
   cargarSolicitudes();
-};
+});
 
-// Exponer si usas onclick en HTML
+// Exponer si usas onclick
 window.aprobarSolicitud = aprobarSolicitud;
 window.rechazarSolicitud = rechazarSolicitud;
 window.eliminarSolicitud = eliminarSolicitud;
