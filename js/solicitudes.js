@@ -3,9 +3,13 @@ const limit = 20;
 let cargando = false;
 
 function formatearMes(fechaStr) {
-  const fecha = new Date(fechaStr);
+  if (!fechaStr) return '—';
+  // Acepta "YYYY-MM-DD" o "YYYY-MM"
+  const [y, m = 1, d = 1] = fechaStr.split(/[-T]/).map(Number);
+  const fecha = new Date(y, m - 1, d); // ← local, sin desfase
   return fecha.toLocaleString('es-MX', { month: 'long', year: 'numeric' });
 }
+
 
 async function cargarSolicitudes(reset = false) {
   if (cargando) return;
