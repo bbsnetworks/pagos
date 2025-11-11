@@ -1,7 +1,7 @@
 <?php
     $servername = 'b88e0bd2df17.sn.mynetname.net:3306';
-    $database = 'sysbbs_parquer';
-    //$database = 'sysbbs';
+    //$database = 'sysbbs_parquer';
+    $database = 'sysbbs';
     $username = 'adminbbs';
     $password = 'Admin_Pinck';
     // Create connection
