@@ -1,64 +1,79 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-include 'conexion.php';
+require_once 'conexion.php';
 
-$json = json_decode(file_get_contents("php://input"), true);
-$offset = $json["offset"] ?? 0;
-$limit = $json["limit"] ?? 20;
-$search = mysqli_real_escape_string($conexion, $json["search"] ?? '');
+$input  = json_decode(file_get_contents('php://input'), true) ?? [];
+$offset = (int)($input['offset'] ?? 0);
+$limit  = (int)($input['limit']  ?? 20);
+$search = mysqli_real_escape_string($conexion, $input['search'] ?? '');
 
-$usuario = $_SESSION['user'] ?? '';
-$tipo = $_SESSION['tipo'] ?? '';
-$iduser = $_SESSION['iduser'] ?? 0;
+$tipo   = strtolower($_SESSION['tipo'] ?? '');
+$iduser = (int)($_SESSION['iduser'] ?? 0);
 
 $filtro_localidades = '';
 
-// Solo aplicar el filtro si es usuario tipo "pagos"
-if ($tipo === 'pagos' || $tipo === 'admin' && $iduser > 0) {
-  $localidades = [];
-  $res = mysqli_query($conexion, "SELECT permiso FROM permisos WHERE idusuario = $iduser");
+// --- Obtener permisos del usuario (si aplica) ---
+$localidades = [];
+if ($iduser > 0) {
+  $res = mysqli_query($conexion, "SELECT permiso FROM permisos WHERE idusuario = {$iduser}");
   while ($row = mysqli_fetch_assoc($res)) {
+    // cada permiso es una 'localidad'
     $localidades[] = "'" . mysqli_real_escape_string($conexion, $row['permiso']) . "'";
-  }
-
-  if (count($localidades) > 0) {
-    $filtro_localidades = " AND localidad IN (" . implode(",", $localidades) . ")";
-  } else {
-    // No tiene permisos asignados
-    $filtro_localidades = " AND 1=0";
   }
 }
 
-// Búsqueda
+// --- Política por rol ---
+if ($tipo === 'pagos') {
+  // pagos: Debe tener permisos; si no, no ve nada
+  if (count($localidades) > 0) {
+    $filtro_localidades = " AND localidad IN (" . implode(",", $localidades) . ")";
+  } else {
+    $filtro_localidades = " AND 1=0";
+  }
+} elseif ($tipo === 'admin') {
+  // admin: si tiene permisos, se filtra; si no, sin filtro (ve todo)
+  if (count($localidades) > 0) {
+    $filtro_localidades = " AND localidad IN (" . implode(",", $localidades) . ")";
+  }
+} elseif ($tipo === 'root') {
+  // root: sin filtro (ve todo)
+  // $filtro_localidades = ''; // explícito
+} else {
+  // rol desconocido: por seguridad, nada
+  $filtro_localidades = " AND 1=0";
+}
+
+// --- Filtro de búsqueda ---
 $filtro_busqueda = '';
-if ($search) {
+if ($search !== '') {
   $filtro_busqueda = "
     (
-      idcliente LIKE '%$search%' OR
-      nombre LIKE '%$search%' OR
-      direccion LIKE '%$search%' OR
-      localidad LIKE '%$search%' OR
-      nodo LIKE '%$search%' OR
-      ip LIKE '%$search%' OR
-      telefono LIKE '%$search%' OR
-      email LIKE '%$search%' OR
-      paquete LIKE '%$search%'
+      idcliente LIKE '%{$search}%' OR
+      nombre    LIKE '%{$search}%' OR
+      direccion LIKE '%{$search}%' OR
+      localidad LIKE '%{$search}%' OR
+      nodo      LIKE '%{$search}%' OR
+      ip        LIKE '%{$search}%' OR
+      telefono  LIKE '%{$search}%' OR
+      email     LIKE '%{$search}%' OR
+      paquete   LIKE '%{$search}%'
     )
   ";
 }
 
-// Componer cláusula WHERE
+// --- WHERE final ---
+$whereParts = [];
+if ($filtro_busqueda)     $whereParts[] = $filtro_busqueda;
+if ($filtro_localidades)  $whereParts[] = ltrim($filtro_localidades, ' AND');
+
 $where = '';
-if ($filtro_busqueda && $filtro_localidades) {
-  $where = "WHERE $filtro_busqueda $filtro_localidades";
-} elseif ($filtro_busqueda) {
-  $where = "WHERE $filtro_busqueda";
-} elseif ($filtro_localidades) {
-  $where = "WHERE 1=1 $filtro_localidades";
+if (!empty($whereParts)) {
+  // Une con AND y evita doble AND al inicio
+  $where = 'WHERE ' . implode(' AND ', $whereParts);
 }
 
-// Consulta principal
+// --- Query ---
 $query = "
   SELECT 
     idcliente AS id,
@@ -72,16 +87,17 @@ $query = "
     email,
     paquete
   FROM clientes
-  $where
+  {$where}
   ORDER BY nombre ASC
-  LIMIT $limit OFFSET $offset
+  LIMIT {$limit} OFFSET {$offset}
 ";
 
 $result = mysqli_query($conexion, $query);
 $clientes = [];
-
-while ($row = mysqli_fetch_assoc($result)) {
-  $clientes[] = $row;
+if ($result) {
+  while ($row = mysqli_fetch_assoc($result)) {
+    $clientes[] = $row;
+  }
 }
 
 echo json_encode($clientes);

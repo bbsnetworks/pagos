@@ -12,6 +12,9 @@ if (($_SESSION['tipo'] ?? '') !== 'pagos') {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mis Solicitudes</title>
+  <script>
+  window.USER_ID = <?= (int)($_SESSION['iduser'] ?? 0) ?>;
+</script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet" />

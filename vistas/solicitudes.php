@@ -1,6 +1,8 @@
 <?php
 session_start();
-if (!in_array($_SESSION['tipo'] ?? '', ['root'])) {
+$tipo = strtolower($_SESSION['tipo'] ?? '');
+
+if (!in_array($tipo, ['root','admin'], true)) {
   header("Location: ../index.php");
   exit;
 }

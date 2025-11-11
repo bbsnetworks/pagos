@@ -105,25 +105,74 @@ if (!isset($_SESSION['username'])) {
   </div>
 </div>
 
-<!-- MODAL SOLICITAR ELIMINACIÓN -->
+<!-- MODAL SOLICITAR CAMBIO/ELIMINACIÓN -->
 <div id="modal-solicitud" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
   <div class="bg-gray-800 p-6 rounded w-full max-w-md relative">
     <button onclick="cerrarModal('modal-solicitud')" class="absolute top-2 right-2 text-white text-xl">✕</button>
-    <h2 class="text-2xl font-bold mb-4">Solicitar eliminación de pago</h2>
-    <p><strong>Mes:</strong> <span id="se-mes"></span></p>
-    <p><strong>Monto:</strong> $<span id="se-monto"></span></p>
+    <h2 class="text-2xl font-bold mb-4">Solicitar cambio o eliminación de pago</h2>
 
-    <div class="mt-4">
-      <label class="block mb-1">Motivo de eliminación:</label>
-      <textarea id="se-motivo" class="w-full bg-gray-700 p-2 rounded text-white" rows="4"></textarea>
+    <div class="grid grid-cols-2 gap-3 text-sm mb-3">
+      <div>
+        <p><strong>Mes:</strong> <span id="se-mes" class="font-medium"></span></p>
+        <p><strong>ID Pago:</strong> <span id="se-idpago" class="font-mono"></span></p>
+      </div>
+      <div>
+        <p><strong>Monto actual:</strong> $<span id="se-monto-actual"></span></p>
+        <p><strong>Tipo actual:</strong> <span id="se-tipo-actual"></span></p>
+      </div>
     </div>
 
-    <div class="mt-4 text-right">
-      <button onclick="enviarSolicitudEliminacion()" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">Enviar solicitud</button>
+    <label class="block text-sm mb-1">¿Qué deseas solicitar?</label>
+    <div class="flex flex-col gap-2 mb-4">
+      <label class="inline-flex items-center gap-2">
+        <input type="radio" name="se-tipo-solicitud" value="eliminacion" checked class="accent-red-500">
+        Eliminación del pago
+      </label>
+      <label class="inline-flex items-center gap-2">
+        <input type="radio" name="se-tipo-solicitud" value="cambio_monto" class="accent-blue-500">
+        Cambio de monto
+      </label>
+      <label class="inline-flex items-center gap-2">
+        <input type="radio" name="se-tipo-solicitud" value="cambio_tipo" class="accent-blue-500">
+        Cambio de tipo (efectivo/transferencia)
+      </label>
+    </div>
+
+    <div id="se-campo-monto" class="mb-4 hidden">
+      <label class="block text-sm mb-1">Nuevo monto</label>
+      <input type="number" step="0.01" min="0" id="se-monto-nuevo" class="w-full bg-gray-700 p-2 rounded text-white" placeholder="0.00">
+    </div>
+
+    <div id="se-campo-tipo" class="mb-4 hidden">
+      <label class="block text-sm mb-1">Nuevo tipo</label>
+      <div class="flex items-center gap-6">
+        <label class="inline-flex items-center gap-2">
+          <input type="radio" name="se-tipo-nuevo" value="efectivo" class="accent-blue-500"> Efectivo
+        </label>
+        <label class="inline-flex items-center gap-2">
+          <input type="radio" name="se-tipo-nuevo" value="transferencia" class="accent-blue-500"> Transferencia
+        </label>
+      </div>
+    </div>
+
+    <div class="mt-2">
+      <label class="block mb-1 text-sm">Motivo</label>
+      <textarea id="se-motivo" class="w-full bg-gray-700 p-2 rounded text-white" rows="4"
+        placeholder="Describe brevemente el motivo de la solicitud"></textarea>
+    </div>
+
+    <!-- hidden -->
+    <input type="hidden" id="se-idpago-hidden">
+    <input type="hidden" id="se-cliente-hidden">
+    <input type="hidden" id="se-monto-actual-hidden">
+    <input type="hidden" id="se-tipo-actual-hidden">
+
+    <div class="mt-4 flex justify-end gap-2">
+      <button onclick="cerrarModal('modal-solicitud')" class="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600">Cancelar</button>
+      <button onclick="enviarSolicitudCambio()" class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">Enviar solicitud</button>
     </div>
   </div>
 </div>
-
 
 <script>
   const tipoUsuario = "<?= $_SESSION['tipo'] ?? '' ?>";

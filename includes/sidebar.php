@@ -22,7 +22,7 @@ $tipoUsuario = $_SESSION['tipo'] ?? ''; // Si no hay sesión activa, queda como 
           <i class="fas fa-home"></i> <span>Dashboard</span>
         </a>
 
-        <?php if ($tipoUsuario == 'root'): ?>
+        <?php if ($tipoUsuario == 'root' || $tipoUsuario == 'admin'): ?>
         <a href="<?= $base ?>/vistas/solicitudes.php" class="flex items-center gap-2 text-white hover:text-blue-400">
           <i class="fa-solid fa-list"></i> <span>Solicitudes</span>
         </a>
@@ -32,7 +32,7 @@ $tipoUsuario = $_SESSION['tipo'] ?? ''; // Si no hay sesión activa, queda como 
           <i class="fa-solid fa-file-pdf"></i> <span>Reportes</span>
         </a>
 
-        <?php if ($tipoUsuario === 'pagos' || $tipoUsuario === 'admin'): ?>
+        <?php if ($tipoUsuario === 'pagos'): ?>
         <a href="<?= $base ?>/vistas/ver_mis_solicitudes.php" class="flex items-center gap-2 text-white hover:text-blue-400">
           <i class="fa-solid fa-box-archive"></i> <span>Mis Solicitudes</span>
         </a>

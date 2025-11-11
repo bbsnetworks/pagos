@@ -156,33 +156,31 @@ async function cargarSolicitudes() {
         ? formatMesAnioYM(sol.mes_a_eliminar_ym)
         : "—";
 
-      div.innerHTML = `
+      const esPropia = Number(sol.solicitado_por) === Number(window.USER_ID);
+const accionesHTML = (sol.estado === 'pendiente' && esPropia)
+  ? `
+    <div class="mt-3 flex flex-wrap gap-2">
+      <button class="bg-gray-700 px-4 py-2 text-sm sm:text-base rounded hover:bg-gray-600 transition"
+              onclick="eliminarSolicitud(${sol.idsolicitud ?? sol.id})">
+        🗑️ Eliminar solicitud
+      </button>
+    </div>
+  `
+  : '';
+
+div.innerHTML = `
   <div class="flex flex-col gap-1">
     <p><strong>Cliente:</strong> ${nomCliente} (ID ${idCliente})</p>
     <p><strong>Pago ID:</strong> ${sol.idpago ?? "—"}</p>
     <p><strong>Motivo:</strong> ${sol.motivo ?? "—"}</p>
-    <p><strong>Solicitado por:</strong> ${
-      sol.solicitado_por_nombre ?? sol.solicitado_por ?? "-"
-    }</p>
+    <p><strong>Solicitado por:</strong> ${sol.solicitado_por_nombre ?? sol.solicitado_por ?? "-"}</p>
     <p><strong>Fecha:</strong> ${fechaTxt}</p>
     <p><strong>Mes eliminado:</strong> ${mesElimTxt}</p>
     <p><strong>Estado:</strong> ${estadoBadge}</p>
   </div>
-${sol.estado === 'pendiente' ? `
-  <div class="mt-3 flex flex-wrap gap-2">
-    <button class="bg-green-600 px-4 py-2 text-sm sm:text-base rounded hover:bg-green-700 transition"
-            onclick="aprobarSolicitud(${sol.idsolicitud ?? sol.id}, ${sol.idpago})">
-      ✅ Aprobar
-    </button>
-    <button class="bg-red-600 px-4 py-2 text-sm sm:text-base rounded hover:bg-red-700 transition"
-            onclick="rechazarSolicitud(${sol.idsolicitud ?? sol.id})">
-      ❌ Rechazar
-    </button>
-  </div>
-` : '' }
-
-
+  ${accionesHTML}
 `;
+
 
       contenedor.appendChild(div);
     }

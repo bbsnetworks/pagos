@@ -604,3 +604,6 @@ Respuesta:
 URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.202.254&ip_nodo=192.168.99.1&nodo_user=admin&nodo_password=netmanwu&folio=1574
 Respuesta: 
 
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.40.15&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=7+Mbps&folio=1216
+Respuesta: 
+
