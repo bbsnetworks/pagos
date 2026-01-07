@@ -607,3 +607,24 @@ Respuesta:
 URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.40.15&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=7+Mbps&folio=1216
 Respuesta: 
 
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.92.36&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=15+Mbps&folio=1217
+Respuesta: 
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.92.36&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=15+Mbps&folio=1217
+Respuesta: 
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.92.36&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=15+Mbps&folio=1217
+Respuesta: 
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.92.36&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=15+Mbps&folio=1217
+Respuesta: 
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.92.36&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=15+Mbps&folio=1218
+Respuesta: 
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.92.36&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=15+Mbps&folio=1219
+Respuesta: 
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.92.36&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=15+Mbps&folio=1220
+Respuesta: 
+

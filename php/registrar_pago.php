@@ -77,6 +77,11 @@ if ($nodo_result && mysqli_num_rows($nodo_result) > 0) {
   }
 }
 
+  date_default_timezone_set('America/Mexico_City'); // opcional pero recomendado
+
+  $fechaPagadaISO = $fecha; // "2026-02-01"
+  $fechaPagadaTicket = date('d/m/Y', strtotime($fechaPagadaISO)); // "01/02/2026"
+  $fechaEmisionTicket = date('d/m/Y H:i'); // por si también quieres la fecha/hora real de pago
 
   // Generar JSON de ticket para el frontend
   echo json_encode([
@@ -91,7 +96,7 @@ if ($nodo_result && mysqli_num_rows($nodo_result) > 0) {
       'paquete' => $cliente['paquete'],
       'pago' => $mensualidad,
       'descuento' => $descuento,
-      'fecha' => date('Y-m-d'),
+      'fecha' => $fechaPagadaTicket,
       'user' => $user
     ]
   ]);
