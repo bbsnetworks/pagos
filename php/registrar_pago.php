@@ -40,11 +40,11 @@ $nodoNombre = $cliente['nodo'];
 // Calcular el próximo folio como order_id
 $folio_result = mysqli_query($conexion, "SELECT MAX(order_id) AS max_order FROM pagos");
 $folio_data = mysqli_fetch_assoc($folio_result);
-$folio = intval($folio_data['max_order']) + 1;
+//$folio = intval($folio_data['max_order']) + 1;
 
 // Insertar el pago
-$query = "INSERT INTO pagos (cliente, pago, fecha, fechapago, user, tipo, descuento, order_id) 
-          VALUES ($idcliente, '$mensualidad', '$fecha', NOW(), '$user', $tipo_original, '$descuento', $folio)";
+$query = "INSERT INTO pagos (cliente, pago, fecha, fechapago, user, tipo, descuento) 
+          VALUES ($idcliente, '$mensualidad', '$fecha', NOW(), '$user', $tipo_original, '$descuento')";
 
 if (mysqli_query($conexion, $query)) {
 
