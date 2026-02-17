@@ -607,6 +607,7 @@ Respuesta:
 URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.40.15&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=7+Mbps&folio=1216
 Respuesta: 
 
+<<<<<<< Updated upstream
 URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.92.36&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=15+Mbps&folio=1217
 Respuesta: 
 
@@ -626,5 +627,219 @@ URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.
 Respuesta: 
 
 URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.92.36&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=15+Mbps&folio=1220
+=======
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.202.254&ip_nodo=192.168.99.1&nodo_user=admin&nodo_password=netmanwu&folio=1632
+Respuesta: 
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.21.192&ip_nodo=192.168.21.1&nodo_user=admin&nodo_password=netmanwu&folio=1632
+Respuesta: La IP 192.168.21.192 fue encontrada en la posición 43
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.16&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1633
+Respuesta: La IP 192.168.23.16 fue encontrada en la posición 8
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.31&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1634
+Respuesta: La IP 192.168.23.31 fue encontrada en la posición 24
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.29&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1635
+Respuesta: La IP 192.168.23.29 fue encontrada en la posición 22
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.20.22&ip_nodo=192.168.20.1&nodo_user=admin&nodo_password=netmanwu&folio=1636
+Respuesta: La IP 192.168.20.22 fue encontrada en la posición 10
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.28&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1637
+Respuesta: La IP 192.168.23.28 fue encontrada en la posición 21
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.49.22&ip_nodo=192.168.49.1&nodo_user=admin&nodo_password=netmanwu&folio=1640
+Respuesta: La IP 192.168.49.22 fue encontrada en la posición 0
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.28&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1644
+Respuesta: La IP 192.168.23.28 fue encontrada en la posición 21
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.19&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1645
+Respuesta: La IP 192.168.23.19 fue encontrada en la posición 12
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.15&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1646
+Respuesta: La IP 192.168.23.15 fue encontrada en la posición 4
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.14&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1647
+Respuesta: La IP 192.168.23.14 fue encontrada en la posición 3
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.21.252&ip_nodo=192.168.21.1&nodo_user=admin&nodo_password=netmanwu&folio=1652
+Respuesta: La IP 192.168.21.252 fue encontrada en la posición 153
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.21.252&ip_nodo=192.168.21.1&nodo_user=admin&nodo_password=netmanwu&folio=1653
+Respuesta: La IP 192.168.21.252 fue encontrada en la posición 153
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.22&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1686
+Respuesta: La IP 192.168.23.22 fue encontrada en la posición 15
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.10&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1687
+Respuesta: La IP 192.168.23.10 fue encontrada en la posición 0
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.27&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1688
+Respuesta: La IP 192.168.23.27 fue encontrada en la posición 20
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.17&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1689
+Respuesta: La IP 192.168.23.17 fue encontrada en la posición 9
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.20.22&ip_nodo=192.168.20.1&nodo_user=admin&nodo_password=netmanwu&folio=1692
+Respuesta: La IP 192.168.20.22 fue encontrada en la posición 10
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.93.33&ip_nodo=192.168.93.1&nodo_user=admin&nodo_password=netmanwu&folio=1695
+Respuesta: La IP 192.168.93.33 fue encontrada en la posición 27
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.32&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1698
+Respuesta: La IP 192.168.23.32 fue encontrada en la posición 25
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.16&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1699
+Respuesta: La IP 192.168.23.16 fue encontrada en la posición 8
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.25&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1700
+Respuesta: La IP 192.168.23.25 fue encontrada en la posición 17
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.31&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1701
+Respuesta: La IP 192.168.23.31 fue encontrada en la posición 24
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.23.33&ip_nodo=192.168.23.1&nodo_user=admin&nodo_password=netmanwu&folio=1702
+Respuesta: La IP 192.168.23.33 fue encontrada en la posición 26
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.21.73&ip_nodo=192.168.21.1&nodo_user=admin&nodo_password=netmanwu&folio=1704
+Respuesta: La IP 192.168.21.73 fue encontrada en la posición 157
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.21.73&ip_nodo=192.168.21.1&nodo_user=admin&nodo_password=netmanwu&folio=1705
+Respuesta: La IP 192.168.21.73 fue encontrada en la posición 157
+Array
+(
+    [0] => !done
+)
+<script>window.close()</script>
+
+URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.202.254&ip_nodo=192.168.99.1&nodo_user=admin&nodo_password=netmanwu&folio=1752
+>>>>>>> Stashed changes
 Respuesta: 
 
