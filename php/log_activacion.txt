@@ -608,6 +608,7 @@ URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.
 Respuesta: 
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.92.36&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=15+Mbps&folio=1217
 Respuesta: 
 
@@ -628,6 +629,8 @@ Respuesta:
 
 URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik2.php?ip_cliente=192.168.92.36&ip_nodo=10.10.3.1&nodo_user=admin&nodo_password=netmanwu&paquete=15+Mbps&folio=1220
 =======
+=======
+>>>>>>> Stashed changes
 URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.202.254&ip_nodo=192.168.99.1&nodo_user=admin&nodo_password=netmanwu&folio=1632
 Respuesta: 
 
@@ -840,6 +843,9 @@ Array
 <script>window.close()</script>
 
 URL: http://b88e0bd2df17.sn.mynetname.net/mikrotik/mikrotik.php?ip_cliente=192.168.202.254&ip_nodo=192.168.99.1&nodo_user=admin&nodo_password=netmanwu&folio=1752
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 Respuesta: 
 
