@@ -166,11 +166,33 @@ if (!isset($_SESSION['username'])) {
     <input type="hidden" id="se-cliente-hidden">
     <input type="hidden" id="se-monto-actual-hidden">
     <input type="hidden" id="se-tipo-actual-hidden">
+    <input type="hidden" id="se-referencia-hidden">
 
-    <div class="mt-4 flex justify-end gap-2">
-      <button onclick="cerrarModal('modal-solicitud')" class="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600">Cancelar</button>
-      <button onclick="enviarSolicitudCambio()" class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">Enviar solicitud</button>
-    </div>
+    <div class="mt-4 flex flex-wrap justify-end gap-2">
+  <button
+    type="button"
+    onclick="reimprimirTicketPago()"
+    class="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white"
+  >
+    Reimprimir ticket
+  </button>
+
+  <button
+    type="button"
+    onclick="cerrarModal('modal-solicitud')"
+    class="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600"
+  >
+    Cancelar
+  </button>
+
+  <button
+    type="button"
+    onclick="enviarSolicitudCambio()"
+    class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700"
+  >
+    Enviar solicitud
+  </button>
+</div>
   </div>
 </div>
 

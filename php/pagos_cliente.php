@@ -7,7 +7,7 @@ $idcliente = intval($json['idcliente'] ?? 0);
 $anio = intval($json['anio'] ?? date('Y'));
 
 // Incluir también el campo `descuento`
-$query = "SELECT idpago, fecha, pago, descuento FROM pagos 
+$query = "SELECT idpago, fecha, pago, descuento, order_id FROM pagos 
           WHERE cliente = $idcliente AND YEAR(fecha) = $anio";
 
 $result = mysqli_query($conexion, $query);

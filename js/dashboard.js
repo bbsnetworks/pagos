@@ -184,7 +184,8 @@ function normalizaPagosRespuesta(data) {
           descuento: parseFloat(item.descuento ?? 0),
           idpago: item.idpago ?? item.id ?? null,
           // nuevo: intenta varios nombres de campo
-          tipo: (item.tipo ?? item.metodo ?? item.forma_pago ?? null)
+          tipo: (item.tipo ?? item.metodo ?? item.forma_pago ?? null),
+          referencia: item.order_id ?? item.referencia ?? null
         };
       }
     }
@@ -240,15 +241,15 @@ function cargarPagosAnuales() {
           btn.innerHTML = `${mesTexto}<br>$${montoFinal.toFixed(2)}`;
 
           btn.onclick = () =>
-            abrirModalSolicitud({
-              idPago: info.idpago,
-              clienteId: clienteActual,
-              mesTexto,
-              monto: montoFinal,
-              // usa lo que te mande el backend; fallback efectivo si no viene:
-              tipoPago:
-                info.tipo !== undefined && info.tipo !== null ? info.tipo : 1,
-            });
+  abrirModalSolicitud({
+    idPago: info.idpago,
+    clienteId: clienteActual,
+    mesTexto,
+    monto: montoFinal,
+    tipoPago:
+      info.tipo !== undefined && info.tipo !== null ? info.tipo : 1,
+    referencia: info.referencia || ""
+  });
           lista.appendChild(btn);
         } else {
           const div = document.createElement("div");
@@ -459,10 +460,13 @@ function registrarPago(yyyymm) {
   }
 });
 // Abrir modal unificado (eliminar / cambio_monto / cambio_tipo)
-function abrirModalSolicitud({ idPago, clienteId, mesTexto, monto, tipoPago }) {
+function abrirModalSolicitud({ idPago, clienteId, mesTexto, monto, tipoPago, referencia = "" }) {
+
   $("se-mes").textContent = mesTexto || "";
   $("se-idpago").textContent = idPago ?? "";
   $("se-monto-actual").textContent = Number(monto ?? 0).toFixed(2);
+  $("se-referencia-hidden").value = referencia || "";
+
   const tipoTxt =
     String(tipoPago) === "1" || tipoPago === "efectivo"
       ? "efectivo"
@@ -571,7 +575,33 @@ async function enviarSolicitudCambio() {
     );
   }
 }
+async function reimprimirTicketPago() {
+  const idpago = $("se-idpago-hidden")?.value;
 
+  if (!idpago) {
+    Swal.fire("Error", "No se encontró el ID del pago.", "error");
+    return;
+  }
+
+  try {
+    const res = await fetch("php/obtener_ticket_pago.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idpago: Number(idpago) }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.message || "No se pudo obtener la información del ticket");
+    }
+
+    generarTicket(data.ticket);
+  } catch (err) {
+    console.error(err);
+    Swal.fire("Error", err.message || "No se pudo reimprimir el ticket.", "error");
+  }
+}
 /* =========================================================
  *  Utilidades de modales
  * =======================================================*/
@@ -691,6 +721,7 @@ window.cargarPagosAnuales = cargarPagosAnuales;
 window.cargarMasClientes = cargarMasClientes;
 window.abrirModalSolicitud = abrirModalSolicitud;
 window.enviarSolicitudCambio = enviarSolicitudCambio;
+window.reimprimirTicketPago = reimprimirTicketPago;
 
 /* =========================================================
  *  Arranque
