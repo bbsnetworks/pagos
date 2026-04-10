@@ -621,7 +621,7 @@ function generarTicket(datos) {
   center(`Fecha: ${datos.fecha}`, y);
   y += 8;
 
-  y = centerBlock("Referencia:", datos.cliente, y);
+  y = centerBlock("Referencia:", datos.referencia || "-", y);
   y = centerBlock("Cliente:", datos.nombre, y);
   y = centerBlock("Dirección:", datos.direccion, y);
   y = centerBlock("Localidad:", datos.localidad, y);
